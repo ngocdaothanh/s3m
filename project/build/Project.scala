@@ -15,6 +15,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
 
   // Repos ---------------------------------------------------------------------
 
+  // For Servlet 3.0 API
   val javanet = "java.net" at
     "http://download.java.net/maven/2/"
 

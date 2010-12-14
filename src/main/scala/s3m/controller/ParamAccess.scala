@@ -1,6 +1,6 @@
 package s3m.controller
 
-import s3m.Controller
+import s3m.{Controller, MissingParam}
 
 trait ParamAccess {
   this: Controller =>

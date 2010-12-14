@@ -2,8 +2,9 @@ package s3m.controller
 
 import s3m._
 
-import java.util.{LinkedHashMap => JLinkedHashMap, List => JList}
+import java.net.URLDecoder
 import java.lang.reflect.Method
+import java.util.{LinkedHashMap => JLinkedHashMap, List => JList}
 
 import scala.collection.mutable.{ArrayBuffer, StringBuilder}
 
@@ -61,8 +62,11 @@ object Routes extends Logger {
    *
    * controller name and action name are put int pathParams.
    */
-  def matchRoute(method: HttpMethod, pathInfo: String): Option[(KA, Env.Params)] = {
-    val tokens = pathInfo.split("/").filter(_ != "")
+  def matchRoute(method: HttpMethod, encodedPathInfo: String): Option[(KA, Env.Params)] = {
+    val tokens = {
+      val encodeds = encodedPathInfo.split("/").filter(_ != "")
+      encodeds.map(URLDecoder.decode(_, "UTF-8"))
+    }
 
     val max1   = tokens.size
 

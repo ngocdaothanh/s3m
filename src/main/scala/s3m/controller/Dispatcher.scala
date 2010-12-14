@@ -1,13 +1,15 @@
 package s3m.controller
 
-import s3m.{Config, Logger, Util}
+import s3m.{Config, Logger, MissingParam, Util}
 
 import java.lang.reflect.{Method, InvocationTargetException}
 import java.util.{Map => JMap, List => JList, LinkedHashMap}
 
 import javax.servlet.{AsyncContext, Filter => SFilter, FilterConfig, ServletRequest, ServletResponse, FilterChain}
+import javax.servlet.annotation.WebFilter
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
+@WebFilter(asyncSupported=true)
 class Dispatcher extends SFilter with Logger {
   def init(filterConfig: FilterConfig) {
     Routes.collectAndCompile
@@ -22,8 +24,9 @@ class Dispatcher extends SFilter with Logger {
 
     val request  = servletRequest.asInstanceOf[HttpServletRequest]
 
-    val method = overrideMethod(request)
-    Routes.matchRoute(method, request.getPathInfo) match {
+    val method          = overrideMethod(request)
+    val encodedPathInfo = request.getRequestURI.substring(request.getContextPath.length)
+    Routes.matchRoute(method, encodedPathInfo) match {
       case Some((ka, pathParams)) =>
         val response = servletResponse.asInstanceOf[HttpServletResponse]
         dispatchWithFailsafe(request, response, method, ka, pathParams)
@@ -112,7 +115,7 @@ class Dispatcher extends SFilter with Logger {
     val params   = filterParams(env.allParams)
     val endTimestamp = System.currentTimeMillis
 
-    val msg = "%s %s %d [ms]".format(env.method, env.request.getPathInfo, params.toString, endTimestamp - beginTimestamp)
+    val msg = "%s %s %s %d [ms]".format(env.method, env.request.getRequestURI, params.toString, endTimestamp - beginTimestamp)
     logger.debug(msg)
   }
 
