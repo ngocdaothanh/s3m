@@ -1,9 +1,10 @@
 package s3m.controller
 
-import s3m.{Config, Logger, MissingParam, Util}
+import s3m.{Config, Logger}
+import s3m.exception._
 
 import java.lang.reflect.{Method, InvocationTargetException}
-import java.util.{Map => JMap, List => JList, LinkedHashMap}
+import java.util.{Map => JMap, List => JList, LinkedHashMap => JLinkedHashMap}
 
 import javax.servlet.{AsyncContext, Filter => SFilter, FilterConfig, ServletRequest, ServletResponse, FilterChain}
 import javax.servlet.annotation.WebFilter
@@ -29,7 +30,9 @@ class Dispatcher extends SFilter with Logger {
     Routes.matchRoute(method, encodedPathInfo) match {
       case Some((ka, pathParams)) =>
         val response = servletResponse.asInstanceOf[HttpServletResponse]
-        dispatchWithFailsafe(request, response, method, ka, pathParams)
+        if (dispatchWithFailsafe(request, response, method, ka, pathParams)) {
+          chain.doFilter(servletRequest, servletResponse)
+        }
 
       case None =>
         chain.doFilter(servletRequest, servletResponse)
@@ -38,12 +41,13 @@ class Dispatcher extends SFilter with Logger {
 
   //----------------------------------------------------------------------------
 
+  /** @return true to pass control to the next filter/servlet */
   private def dispatchWithFailsafe(
       request:    HttpServletRequest,
       response:   HttpServletResponse,
       method:     String,
       ka:         Routes.KA,
-      pathParams: Env.Params) {
+      pathParams: Env.Params): Boolean = {
 
     // For access log
     val beginTimestamp = System.currentTimeMillis
@@ -75,6 +79,7 @@ class Dispatcher extends SFilter with Logger {
       if (passed) action.invoke(controller)
 
       logAccess(controller, beginTimestamp)
+      false
     } catch {
       // MissingParam is a special case
       case e =>
@@ -90,7 +95,13 @@ class Dispatcher extends SFilter with Logger {
             val msg = "Missing Param: " + key
             response.getWriter.print(msg)
             ctx.complete
-          } else {
+            false
+          } else if (c.isInstanceOf[Pass]) {
+            true
+          } else if (c.isInstanceOf[Halt]) {
+            ctx.complete
+            false
+          }	else {
             throw c
           }
         } else {
@@ -107,12 +118,11 @@ class Dispatcher extends SFilter with Logger {
       val _method = request.getParameter("_method")
       if (_method != null) return _method
     }
-
     method
   }
 
   def logAccess(env: Env, beginTimestamp: Long) {
-    val params   = filterParams(env.allParams)
+    val params       = filterParams(env.allParams)
     val endTimestamp = System.currentTimeMillis
 
     val msg = "%s %s %s %d [ms]".format(env.method, env.request.getRequestURI, params.toString, endTimestamp - beginTimestamp)
@@ -121,7 +131,7 @@ class Dispatcher extends SFilter with Logger {
 
   // Same as Rails' config.filter_parameters
   private def filterParams(params: Env.Params): Env.Params = {
-    val ret = new java.util.LinkedHashMap[String, Array[String]]()
+    val ret = new JLinkedHashMap[String, Array[String]]()
     ret.putAll(params)
     for (key <- Config.filterParams) {
       if (ret.containsKey(key)) ret.put(key, Util.toValues("[filtered]"))

@@ -19,10 +19,11 @@ trait Renderer extends {
 
   //----------------------------------------------------------------------------
 
-  def renderBinary(bytes: Array[Byte]) {
+  def renderBinary(bytes: Array[Byte]) = {
     val os = response.getOutputStream
     os.write(bytes)
     os.flush
     complete
+    bytes
   }
 }

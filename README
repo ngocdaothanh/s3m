@@ -1,0 +1,83 @@
+S3m is a Servlet 3.0 framework for Scala in the style of JAX-RS and Scalatra.
+Servelt 3.0 container like Jetty 8, Tomcat 7, Glassfish 3 is required.
+
+== Typical web.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+      version="3.0">
+
+  <!-- S3m filters -->
+
+  <filter>
+    <filter-name>S3m</filter-name>
+    <filter-class>s3m.controller.Dispatcher</filter-class>
+    <async-supported>true</async-supported>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>S3m</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  ...
+</web-app>
+
+== Controller
+
+import s3m._  // Controller, GET, Path etc. are all in package s3m
+
+@Path("/api")
+class Articles extends Controller {
+  @GET
+  @Paths(Array("/articles", "/articles/latest"))
+  def index {
+    ...
+  }
+
+  @GET
+  @Path("/articles/:id")
+  def show {
+    val id = param("id")
+  }
+}
+
+Special variables in a controller:
+* request:   HttpServletRequest
+* response:  HttpServletResponse
+* ctx:       AsyncContext
+
+S3m is async. To mark that the response is complete, in a controller you must
+call "complete" method:
+  response.setStatus(302)
+  response.sendRedirect(url)
+  complete
+
+Or you can call renderText or renderBinary method which complete automatically:
+  renderText("Hello World")
+  renderBinary(byteArray)
+
+To access request parameters:
+* param("key")   => Returns a String, will throw MissingParam if the parameter does not exist
+* params("key")  => Returns Array[String], will throw MissingParam if the parameter does not exist
+* paramo("key")  => Returns Option[String]
+* paramso("key") => Returns Option[Array[String]]
+
+Of course you can use request.getParameter("key") etc. directly. But note that
+these methods does not return parameters extracted from the @Path, like "id" in
+the example above: @Path("/articles/:id").
+
+== Exceptions
+
+import s3m.exceptions.{Halt, MissingParam, Pass}
+
+When you want to stop processing immediately:
+  throw new Halt
+
+When you want to stop processing immediately because of a missing parameter:
+  throw new MissingParam("my_param")
+
+When you want to pass control to the next filter/servlet:
+  throw new Pass

@@ -4,7 +4,10 @@ import s3m.controller._
 import s3m.view.Renderer
 
 trait Controller extends Env with Logger with ParamAccess with Filter with Renderer {
-  private var completed = false
+  // private var completed = false would cause warning:
+  // the initialization is no longer be executed before the superclass is called
+  private var completed: Boolean = _
+  { completed = false }
 
   def complete = synchronized {
     if (completed) {
@@ -12,7 +15,7 @@ trait Controller extends Env with Logger with ParamAccess with Filter with Rende
       try {
         throw new Exception
       } catch {
-        case e => logger.warn("Double respond", e)
+        case e => logger.warn("Double render", e)
       }
     } else {
       completed = true

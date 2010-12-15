@@ -1,4 +1,4 @@
-package s3m
+package s3m.controller
 
 object Util {
   /** Wraps a single String by an Array. */

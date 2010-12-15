@@ -30,6 +30,11 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
       "javax"           % "javaee-web-api" % "6.0"   % "provided",
 
       // For scanning all Controllers to build routes
-      "org.reflections" % "reflections"    % "0.9.5-RC2"  // Uses Javassist
-    ) ++ super.libraryDependencies
+      // See http://reflections.googlecode.com/svn/repo/org/reflections/reflections/0.9.5-RC2/reflections-0.9.5-RC2.pom
+      // We to avoid including servlet-api 2.5 because we are using servlet-api 3.0!
+      "org.reflections"        % "reflections"        % "0.9.5-RC2"// intransitive,
+/*      "com.google.collections" % "google-collections" % "1.0",
+      "javassist"              % "javassist"          % "3.10.0.GA",
+      "dom4j"                  % "dom4j"              % "1.6.1"
+*/    ) ++ super.libraryDependencies
 }
