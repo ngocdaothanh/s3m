@@ -125,7 +125,7 @@ class Dispatcher extends SFilter with Logger {
     val params       = filterParams(env.allParams)
     val endTimestamp = System.currentTimeMillis
 
-    val msg = "%s %s %s %d [ms]".format(env.method, env.request.getRequestURI, params.toString, endTimestamp - beginTimestamp)
+    val msg = "%s %s %s %d [ms]".format(env.method, env.request.getRequestURI, inspectParams(params), endTimestamp - beginTimestamp)
     logger.debug(msg)
   }
 
@@ -137,5 +137,26 @@ class Dispatcher extends SFilter with Logger {
       if (ret.containsKey(key)) ret.put(key, Util.toValues("[filtered]"))
     }
     ret
+  }
+
+  private def inspectParams(params: Env.Params): String = {
+    val builder = new StringBuilder
+    val keys = params.keySet
+    builder.append("{")
+    val iter = keys.iterator
+    while (iter.hasNext) {
+      val key = iter.next
+      val values = params.get(key).asInstanceOf[Array[String]]
+      builder.append(key)
+      builder.append("=")
+
+      builder.append("[")
+      builder.append(values.mkString(", "))
+      builder.append("]")
+
+      if (iter.hasNext) builder.append(", ")
+    }
+    builder.append("}")
+    builder.toString
   }
 }
