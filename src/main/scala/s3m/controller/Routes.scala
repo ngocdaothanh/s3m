@@ -50,11 +50,7 @@ object Routes extends Logger {
       ret
     }
     logger.debug(routesDebugString.toString)
-println("----------------------------------------")
-println(compiledRoutes)
-println("---------AnnotationScanner.xAnnotationScanner.xAnnotationScanner.x-------------------------------")
-AnnotationScanner.test
-println("----------------------------------------")
+
     compiledRoutes
   }
 
