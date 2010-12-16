@@ -16,26 +16,18 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
   // Repos ---------------------------------------------------------------------
 
   // For Servlet 3.0 API
-  val javanet = "java.net" at
-    "http://download.java.net/maven/2/"
-
-  val reflections = "Reflections" at
-    "http://reflections.googlecode.com/svn/repo"
+  val javanet = "java.net" at "http://download.java.net/maven/2/"
 
   override def libraryDependencies =
     Set(
-      // Projects using S3m must provide a concrete SLF4J implentation (Logback etc.)
-      "org.slf4j"       % "slf4j-api"      % "1.6.1" % "provided",
-
-      "javax"           % "javaee-web-api" % "6.0"   % "provided",
-
       // For scanning all Controllers to build routes
-      // See http://reflections.googlecode.com/svn/repo/org/reflections/reflections/0.9.5-RC2/reflections-0.9.5-RC2.pom
-      // We to avoid including servlet-api 2.5 because we are using servlet-api 3.0!
-      "org.reflections"        % "reflections"        % "0.9.5-RC2" intransitive,
-      "javassist"              % "javassist"          % "3.10.0.GA",
-      "com.google.collections" % "google-collections" % "1.0",
-      "com.google.code.gson"   % "gson"               % "1.4",
-      "dom4j"                  % "dom4j"              % "1.6"
+      "com.impetus" % "annovention"    % "1.0-SNAPSHOT" from "http://cloud.github.com/downloads/ngocdaothanh/annovention/annovention-1.0-SNAPSHOT.jar",
+      "javassist"   % "javassist"      % "3.10.0.GA",  // annovention's only dependency
+
+      // Projects using S3m must provide a concrete SLF4J implentation (Logback etc.)
+      "org.slf4j"   % "slf4j-api"      % "1.6.1" % "provided",
+
+      // Servlet 3.0 API
+      "javax"       % "javaee-web-api" % "6.0"   % "provided"
     ) ++ super.libraryDependencies
 }

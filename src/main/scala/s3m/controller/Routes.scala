@@ -8,9 +8,6 @@ import java.util.{LinkedHashMap => JLinkedHashMap, List => JList}
 
 import scala.collection.mutable.{ArrayBuffer, StringBuilder}
 
-import org.reflections.Reflections
-import org.reflections.util.{ConfigurationBuilder, ClasspathHelper}
-
 object Routes extends Logger {
   type HttpMethod      = String
   type KA              = (Class[Controller], Method)
@@ -53,7 +50,11 @@ object Routes extends Logger {
       ret
     }
     logger.debug(routesDebugString.toString)
-
+println("----------------------------------------")
+println(compiledRoutes)
+println("---------AnnotationScanner.xAnnotationScanner.xAnnotationScanner.x-------------------------------")
+AnnotationScanner.test
+println("----------------------------------------")
     compiledRoutes
   }
 
@@ -159,9 +160,6 @@ object Routes extends Logger {
 
   /** Scan all subtypes of class Controller to collect routes. */
   def collectRoutes: Array[Route] = {
-    val cb = new ConfigurationBuilder
-    cb.setUrls(ClasspathHelper.getUrlsForCurrentClasspath)
-    val r = new Reflections(cb)
 
     val ks = r.getSubTypesOf(classOf[Controller])  // Controller classes
     val ik = ks.iterator
