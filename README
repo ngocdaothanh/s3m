@@ -81,3 +81,8 @@ When you want to stop processing immediately because of a missing parameter:
 
 When you want to pass control to the next filter/servlet:
   throw new Pass
+
+== Using with SBT
+
+val sonatypeSnapshot = "Sonatype Snapshot" at "https://oss.sonatype.org/content/repositories/snapshots"
+val s3m = "tv.cntt" %% "s3m" % "1.0-SNAPSHOT"
