@@ -1,4 +1,4 @@
-S3m is a Servlet 3.0 framework for Scala in the style of JAX-RS and Scalatra.
+S3m is an async Servlet 3.0 framework for Scala in the style of JAX-RS and Scalatra.
 Servelt 3.0 container like Jetty 8, Tomcat 7, Glassfish 3 is required.
 
 == Typical web.xml
