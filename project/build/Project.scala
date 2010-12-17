@@ -15,8 +15,8 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
 
   // Repos ---------------------------------------------------------------------
 
-  // TODO: remove when annovention is accepted on Sonatype
-  val localMaven = "Local Maven" at "file://" + Path.userHome + "/.m2/repository"
+  // For annovention
+  val sonatypeSnapshot = "Sonatype Snapshot" at "https://oss.sonatype.org/content/repositories/snapshots"
 
   // For Servlet 3.0 API
   val javanet = "java.net" at "http://download.java.net/maven/2/"
@@ -32,4 +32,12 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
       // Servlet 3.0 API
       "javax"               % "javaee-web-api" % "6.0"   % "provided"
     ) ++ super.libraryDependencies
+
+  // Publish -------------------------------------------------------------------
+
+  override def managedStyle = ManagedStyle.Maven
+
+  val publishTo = sonatypeSnapshot
+
+  Credentials(Path.userHome / ".ivy2" / ".credentials", log)
 }
