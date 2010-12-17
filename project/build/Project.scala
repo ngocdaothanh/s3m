@@ -15,19 +15,21 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
 
   // Repos ---------------------------------------------------------------------
 
+  // TODO: remove when annovention is accepted on Sonatype
+  val localMaven = "Local Maven" at "file://" + Path.userHome + "/.m2/repository"
+
   // For Servlet 3.0 API
   val javanet = "java.net" at "http://download.java.net/maven/2/"
 
   override def libraryDependencies =
     Set(
       // For scanning all Controllers to build routes
-      "com.impetus" % "annovention"    % "1.0-SNAPSHOT" from "http://cloud.github.com/downloads/ngocdaothanh/annovention/annovention-1.0-SNAPSHOT.jar",
-      "javassist"   % "javassist"      % "3.10.0.GA",  // annovention's only dependency
+      "tv.cntt.annovention" % "annovention"    % "1.0-SNAPSHOT",
 
       // Projects using S3m must provide a concrete SLF4J implentation (Logback etc.)
-      "org.slf4j"   % "slf4j-api"      % "1.6.1" % "provided",
+      "org.slf4j"           % "slf4j-api"      % "1.6.1" % "provided",
 
       // Servlet 3.0 API
-      "javax"       % "javaee-web-api" % "6.0"   % "provided"
+      "javax"               % "javaee-web-api" % "6.0"   % "provided"
     ) ++ super.libraryDependencies
 }

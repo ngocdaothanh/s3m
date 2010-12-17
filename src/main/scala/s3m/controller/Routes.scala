@@ -21,7 +21,10 @@ object Routes extends Logger {
   private var compiledRoutes: Iterable[CompiledRoute] = _
 
   def collectAndCompile {
-    val routes = collectRoutes
+    // Avoid loading twice in some servlet containers
+    if (compiledRoutes != null) return
+
+    val routes = (new RouteCollector).collect
 
     // Compile and log routes at the same time because the compiled routes do
     // not contain the original URL pattern.
@@ -31,8 +34,8 @@ object Routes extends Logger {
       if (max < len) len else max
     }
 
-    val routesDebugString = new StringBuilder
-    routesDebugString.append("Routes:\n")
+    val builder = new StringBuilder
+    builder.append("Routes:\n")
     compiledRoutes = routes.map { r =>
       val ret = compileRoute(r)
 
@@ -45,13 +48,11 @@ object Routes extends Logger {
       val action     = ret._4._2
 
       val format = "%-6s %-" + patternMaxLength + "s %s#%s\n"
-      routesDebugString.append(format.format(method, pattern, controller, action))
+      builder.append(format.format(method, pattern, controller, action))
 
       ret
     }
-    logger.debug(routesDebugString.toString)
-
-    compiledRoutes
+    logger.info(builder.toString)
   }
 
   /**
@@ -153,52 +154,6 @@ object Routes extends Logger {
   }
 
   //----------------------------------------------------------------------------
-
-  /** Scan all subtypes of class Controller to collect routes. */
-  def collectRoutes: Array[Route] = {
-
-    val ks = r.getSubTypesOf(classOf[Controller])  // Controller classes
-    val ik = ks.iterator
-    val routes = ArrayBuffer[Route]()
-    while (ik.hasNext) {
-      val k = ik.next.asInstanceOf[Class[Controller]]
-      val pathPrefix = {
-        val pathAnnotation = k.getAnnotation(classOf[Path])
-        if (pathAnnotation != null) pathAnnotation.value else ""
-      }
-
-      val ms = k.getMethods                        // Methods
-      for (m <- ms) {
-        val as = m.getAnnotations
-        val paths = ArrayBuffer[String]()
-        val httpMethods = ArrayBuffer[Option[HttpMethod]]()
-        for (a <- as) {
-          if (a.isInstanceOf[Path]) {
-            paths.append(pathPrefix + a.asInstanceOf[Path].value)
-          } else if (a.isInstanceOf[Paths]) {
-            val pathsAnnotation = a.asInstanceOf[Paths]
-            for (pv <- pathsAnnotation.value) paths.append(pathPrefix + pv)
-          } else if (a.isInstanceOf[GET]) {
-            httpMethods.append(Some("GET"))
-          } else if (a.isInstanceOf[POST]) {
-            httpMethods.append(Some("POST"))
-          } else if (a.isInstanceOf[PUT]) {
-            httpMethods.append(Some("PUT"))
-          } else if (a.isInstanceOf[DELETE]) {
-            httpMethods.append(Some("DELETE"))
-          }
-        }
-
-        if (!paths.isEmpty) {  // m is an action
-          if (httpMethods.isEmpty) httpMethods.append(None)
-
-          for (p <- paths; hm <- httpMethods) routes.append((hm, p, (k, m)))
-        }
-      }
-    }
-
-    routes.toArray
-  }
 
   private def compileRoute(route: Route): CompiledRoute = {
     val (method, pattern, ka) = route
