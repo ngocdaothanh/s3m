@@ -126,7 +126,7 @@ class Dispatcher extends SFilter with Logger {
     val endTimestamp = System.currentTimeMillis
 
     val msg = "%s %s %s %d [ms]".format(env.method, env.request.getRequestURI, inspectParams(params), endTimestamp - beginTimestamp)
-    logger.debug(msg)
+    logger.info(msg)
   }
 
   // Same as Rails' config.filter_parameters

@@ -39,5 +39,10 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
 
   val publishTo = sonatypeSnapshot
 
+  // ~/.ivy2/.credentials should be:
+  //   realm=Sonatype Nexus Repository Manager
+  //   host=oss.sonatype.org
+  //   user=xxx
+  //   password=xxx
   Credentials(Path.userHome / ".ivy2" / ".credentials", log)
 }
