@@ -41,8 +41,17 @@ class Articles extends Controller {
   @Path("/articles/:id")
   def show {
     val id = param("id")
+    ...
+  }
+
+  @GET
+  @Path(value="/articles/special", first=true)
+  def specialArticle {
+    ...
   }
 }
+
+@Path and @Paths have "first" and "last" argument to refine the order of routes.
 
 Special variables in a controller:
 * request:   HttpServletRequest

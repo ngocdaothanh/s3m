@@ -13,8 +13,10 @@ import s3m._
 
 /** Scan all classes to collect routes. */
 class RouteCollector extends MethodAnnotationDiscoveryListener {
-  //                              controller         action    HTTP methods   paths
-  private val map = new MHashMap[(Class[Controller], Method), (Array[String], Array[String])]
+  //                                 controller         action    HTTP methods   paths
+  private val firsts = new MHashMap[(Class[Controller], Method), (Array[String], Array[String])]
+  private val lasts  = new MHashMap[(Class[Controller], Method), (Array[String], Array[String])]
+  private val others = new MHashMap[(Class[Controller], Method), (Array[String], Array[String])]
 
   def collect: Array[Routes.Route]  = {
     val discoverer = new ClasspathDiscoverer
@@ -22,15 +24,17 @@ class RouteCollector extends MethodAnnotationDiscoveryListener {
     discoverer.discover
 
     val buffer = new ArrayBuffer[Routes.Route]
-    for ((key, value) <- map) {
-      val (httpMethods, paths) = value
+    for (map <- Array(firsts, others, lasts)) {
+      for ((key, value) <- map) {
+        val (httpMethods, paths) = value
 
-      // paths is always non-empty, see "discovered" method below
+        // paths is always non-empty, see "discovered" method below
 
-      if (httpMethods.isEmpty) {
-        for (p <- paths) buffer.append((None, p, key))
-      } else {
-        for (hm <- httpMethods; p <- paths) buffer.append((Some(hm), p, key))
+        if (httpMethods.isEmpty) {
+          for (p <- paths) buffer.append((None, p, key))
+        } else {
+          for (hm <- httpMethods; p <- paths) buffer.append((Some(hm), p, key))
+        }
       }
     }
     buffer.toArray
@@ -49,7 +53,7 @@ class RouteCollector extends MethodAnnotationDiscoveryListener {
     val method = klass.getMethod(methodName)
     val key    = (klass, method)
 
-    if (map.contains(key)) return
+    if (firsts.contains(key) || lasts.contains(key) || others.contains(key)) return
 
     val pathPrefix = {
       val pathAnnotation = klass.getAnnotation(classOf[Path])
@@ -59,11 +63,18 @@ class RouteCollector extends MethodAnnotationDiscoveryListener {
     val annotations = method.getAnnotations
     val httpMethods = new ArrayBuffer[String]
     val paths       = new ArrayBuffer[String]
+    var first       = false
+    var last        = false
     for (annotation <- annotations) {
       if (annotation.isInstanceOf[Path]) {
-        paths.append(pathPrefix + annotation.asInstanceOf[Path].value)
+        val pathAnnotation = annotation.asInstanceOf[Path]
+        first = pathAnnotation.first
+        last  = pathAnnotation.last
+        paths.append(pathPrefix + pathAnnotation.value)
       } else if (annotation.isInstanceOf[Paths]) {
         val pathsAnnotation = annotation.asInstanceOf[Paths]
+        first = pathsAnnotation.first
+        last  = pathsAnnotation.last
         for (pv <- pathsAnnotation.value) paths.append(pathPrefix + pv)
       } else if (annotation.isInstanceOf[GET]) {
         httpMethods.append("GET")
@@ -76,6 +87,14 @@ class RouteCollector extends MethodAnnotationDiscoveryListener {
       }
     }
 
-    if (!paths.isEmpty) map(key) = (httpMethods.toArray, paths.toArray)
+    if (!paths.isEmpty) {
+      if (first) {
+        firsts(key) = (httpMethods.toArray, paths.toArray)
+      } else if (last) {
+        lasts(key)  = (httpMethods.toArray, paths.toArray)
+      } else {
+        others(key) = (httpMethods.toArray, paths.toArray)
+      }
+    }
   }
 }
