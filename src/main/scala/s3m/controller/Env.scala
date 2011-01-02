@@ -6,8 +6,9 @@ import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
 object Env {
   /**
-   * Design decision: Java Map is used instead of Scala Map because Netty produces
-   * Java Map and we want to avoid costly conversion from Java Map to Scala Map.
+   * Design decision: Java Map is used instead of Scala Map because Servlet
+   * produces Java Map[String, Array[String]]
+   * and we want to avoid costly conversion from Java Map to Scala Map.
    */
   type Params = JMap[String, Array[String]]
 }
